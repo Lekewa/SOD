@@ -35,7 +35,7 @@ mainFrame.Size = UDim2.new(0, 300, 0, 400)
 mainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
 mainFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 mainFrame.BorderSizePixel = 0
-mainFrame.ClipsDescendants = false
+mainFrame.ClipsDescendants = true
 mainFrame.Parent = screenGui
 
 Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 15)
@@ -104,23 +104,24 @@ pages["Главная"].btn.TextColor3 = Color3.new(1,1,1)
 local function setupInput(placeholder, parent, order)
 	local box = Instance.new("TextBox", parent)
 	box.Size = UDim2.new(1, 0, 0, 35); box.PlaceholderText = placeholder; box.BackgroundColor3 = Color3.fromRGB(45, 45, 45); box.TextColor3 = Color3.new(1,1,1)
-	box.LayoutOrder = order; box.ZIndex = 25; Instance.new("UICorner", box)
+	box.LayoutOrder = order; Instance.new("UICorner", box)
 	return box
 end
 
 local function createCheatBtn(text, parent, order)
 	local b = Instance.new("TextButton", parent)
 	b.Size = UDim2.new(1, 0, 0, 45); b.Text = text; b.TextColor3 = Color3.fromRGB(255, 80, 80); b.Font = Enum.Font.GothamBold; b.TextSize = 18; b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-	b.LayoutOrder = order; b.ZIndex = 22; Instance.new("UICorner", b)
+	b.LayoutOrder = order; Instance.new("UICorner", b)
 	return b
 end
 
 -- КОНТЕНТ: ГЛАВНАЯ
 local speedInput = setupInput("Скорость", mainPage, 1)
 local jumpInput = setupInput("Высота прыжка", mainPage, 2)
-local fovInput = setupInput("FOV", mainPage, 3)
+local fovInput = setupInput("FOV (Поле зрения)", mainPage, 3)
 local noclipBtn = createCheatBtn("Ноуклип: Выкл", mainPage, 4)
 local infJumpBtn = createCheatBtn("Инф. Прыжок: Выкл", mainPage, 5)
+local fullbrightBtn = createCheatBtn("Фулбрайт: Выкл", mainPage, 6)
 local platformBtn = createCheatBtn("Платформы: Выкл", mainPage, 7)
 local serverHopBtn = createCheatBtn("Сменить сервер", mainPage, 8)
 serverHopBtn.TextColor3 = Color3.fromRGB(120, 120, 255)
@@ -129,95 +130,63 @@ serverHopBtn.TextColor3 = Color3.fromRGB(120, 120, 255)
 local addTpBtn = createCheatBtn("+", tpPage, 0)
 addTpBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
 
--- МЕНЮ СОЗДАНИЯ (БОКОВОЕ)
+-- МЕНЮ СОЗДАНИЯ ТП
 local tpCreateFrame = Instance.new("Frame", mainFrame)
-tpCreateFrame.Name = "TP_Creator"
-tpCreateFrame.Size = UDim2.new(0, 220, 0, 320)
-tpCreateFrame.Position = UDim2.new(1, 15, 0, 0)
-tpCreateFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-tpCreateFrame.Visible = false; tpCreateFrame.ZIndex = 20
+tpCreateFrame.Size = UDim2.new(0, 260, 0, 240); tpCreateFrame.Position = UDim2.new(0.5, -130, 0.5, -120)
+tpCreateFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40); tpCreateFrame.Visible = false; tpCreateFrame.ZIndex = 20
 Instance.new("UICorner", tpCreateFrame)
-local tpStroke = Instance.new("UIStroke", tpCreateFrame)
-tpStroke.Color = Color3.fromRGB(0, 255, 0); tpStroke.Thickness = 2
+Instance.new("UIStroke", tpCreateFrame).Color = Color3.fromRGB(0, 255, 0)
 
 local createLayout = Instance.new("UIListLayout", tpCreateFrame)
 createLayout.Padding = UDim.new(0, 10); createLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; createLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local typeSelector = Instance.new("Frame", tpCreateFrame)
-typeSelector.Size = UDim2.new(0.9, 0, 0, 35); typeSelector.BackgroundTransparency = 1; typeSelector.LayoutOrder = 1
-local typeLayout = Instance.new("UIListLayout", typeSelector); typeLayout.FillDirection = Enum.FillDirection.Horizontal; typeLayout.Padding = UDim.new(0, 5)
+typeSelector.Size = UDim2.new(0.9, 0, 0, 40); typeSelector.BackgroundTransparency = 1; typeSelector.LayoutOrder = 1
+local typeLayout = Instance.new("UIListLayout", typeSelector); typeLayout.FillDirection = Enum.FillDirection.Horizontal; typeLayout.Padding = UDim.new(0, 10)
 
 local selectedType = "Место"
-local selectedPlayer = ""
-
-local playerListFrame = Instance.new("ScrollingFrame", tpCreateFrame)
-playerListFrame.Size = UDim2.new(0.9, 0, 0, 100); playerListFrame.LayoutOrder = 2; playerListFrame.ZIndex = 25
-playerListFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30); playerListFrame.BorderSizePixel = 0
-playerListFrame.ScrollBarThickness = 4; playerListFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-Instance.new("UICorner", playerListFrame)
-local playerListLayout = Instance.new("UIListLayout", playerListFrame); playerListLayout.Padding = UDim.new(0, 2)
+local targetInput = setupInput("Ник игрока", tpCreateFrame, 2)
+targetInput.Visible = false -- По умолчанию скрыто
 
 local function createTypeBtn(name)
 	local b = Instance.new("TextButton", typeSelector)
-	b.Size = UDim2.new(0.48, 0, 1, 0); b.Text = name; b.BackgroundColor3 = Color3.fromRGB(70, 70, 70); b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.GothamBold
-	b.ZIndex = 25; Instance.new("UICorner", b)
+	b.Size = UDim2.new(0.46, 0, 1, 0); b.Text = name; b.BackgroundColor3 = Color3.fromRGB(60, 60, 60); b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.GothamBold
+	Instance.new("UICorner", b)
 	return b
 end
 
 local typePlaceBtn = createTypeBtn("Место")
 local typePlayerBtn = createTypeBtn("Игрок")
 
-local function refreshPlayerList()
-	for _, v in pairs(playerListFrame:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-	for _, p in pairs(Players:GetPlayers()) do
-		if p ~= player then
-			local b = Instance.new("TextButton", playerListFrame)
-			b.Size = UDim2.new(1, 0, 0, 25); b.BackgroundColor3 = Color3.fromRGB(50, 50, 50); b.Text = p.Name
-			b.TextColor3 = Color3.new(1,1,1); b.Font = Enum.Font.Gotham; b.TextSize = 12; b.ZIndex = 26
-			Instance.new("UICorner", b)
-			b.MouseButton1Click:Connect(function()
-				selectedPlayer = p.Name
-				for _, other in pairs(playerListFrame:GetChildren()) do if other:IsA("TextButton") then other.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end
-				b.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-			end)
-		end
-	end
-end
-
 local function updateSelector()
-	typePlaceBtn.BackgroundColor3 = (selectedType == "Место") and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(70, 70, 70)
-	typePlayerBtn.BackgroundColor3 = (selectedType == "Игрок") and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(70, 70, 70)
-	playerListFrame.Visible = (selectedType == "Игрок")
+	typePlaceBtn.BackgroundColor3 = (selectedType == "Место") and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(60, 60, 60)
+	typePlayerBtn.BackgroundColor3 = (selectedType == "Игрок") and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(60, 60, 60)
+	targetInput.Visible = (selectedType == "Игрок")
 end
+updateSelector()
 
 typePlaceBtn.MouseButton1Click:Connect(function() selectedType = "Место"; updateSelector() end)
 typePlayerBtn.MouseButton1Click:Connect(function() selectedType = "Игрок"; updateSelector() end)
 
-local titleInput = setupInput("Название", tpCreateFrame, 3)
+local titleInput = setupInput("Название кнопки", tpCreateFrame, 3)
 local doneBtn = createCheatBtn("Готово", tpCreateFrame, 4)
-doneBtn.Size = UDim2.new(0.9, 0, 0, 40); doneBtn.TextColor3 = Color3.new(1,1,1)
+doneBtn.Size = UDim2.new(0.9, 0, 0, 40)
 
-addTpBtn.MouseButton1Click:Connect(function() 
-	tpCreateFrame.Visible = not tpCreateFrame.Visible 
-	if tpCreateFrame.Visible then refreshPlayerList(); updateSelector() end
-end)
+addTpBtn.MouseButton1Click:Connect(function() tpCreateFrame.Visible = not tpCreateFrame.Visible end)
 
 doneBtn.MouseButton1Click:Connect(function()
-	local name = titleInput.Text ~= "" and titleInput.Text or (selectedType == "Место" and "Точка" or selectedPlayer)
-	if selectedType == "Игрок" and selectedPlayer == "" then return end -- Не создавать без игрока
-
+	local name = titleInput.Text ~= "" and titleInput.Text or (selectedType == "Место" and "Точка" or targetInput.Text)
 	local tpBtn = createCheatBtn(name, tpPage, 10)
 	tpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	
 	local savedType = selectedType
-	local savedCFrame = (savedType == "Место") and player.Character.HumanoidRootPart.CFrame or nil
-	local savedPlayerName = (savedType == "Игрок") and selectedPlayer or nil
+	local targetData = (savedType == "Место") and player.Character.HumanoidRootPart.CFrame or targetInput.Text
 	
 	tpBtn.MouseButton1Click:Connect(function()
 		if savedType == "Место" then
-			player.Character:SetPrimaryPartCFrame(savedCFrame)
+			player.Character:SetPrimaryPartCFrame(targetData)
 		else
-			local target = Players:FindFirstChild(savedPlayerName)
+			local target = Players:FindFirstChild(targetData)
 			if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
 				player.Character:SetPrimaryPartCFrame(target.Character.HumanoidRootPart.CFrame)
 			end
@@ -225,10 +194,10 @@ doneBtn.MouseButton1Click:Connect(function()
 	end)
 	
 	tpCreateFrame.Visible = false
-	titleInput.Text = ""; selectedPlayer = ""
+	titleInput.Text = ""; targetInput.Text = ""
 end)
 
--- (Остальная логика: Настройки, Ноуклип, Полет, ServerHop — остается без изменений)
+-- ЛОГИКА ГЛАВНОЙ
 speedInput.FocusLost:Connect(function() if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = tonumber(speedInput.Text) or 16 end end)
 jumpInput.FocusLost:Connect(function() if player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.JumpPower = tonumber(jumpInput.Text) or 50 end end)
 fovInput.FocusLost:Connect(function() camera.FieldOfView = tonumber(fovInput.Text) or 70 end)
@@ -266,6 +235,11 @@ serverHopBtn.MouseButton1Click:Connect(function()
 	task.wait(2); serverHopBtn.Text = "Сменить сервер"
 end)
 
+-- ЛОГИКА НАСТРОЕК
+local nameInput = setupInput("Название чита", settingsPage, 1)
+nameInput.FocusLost:Connect(function() if #nameInput.Text >= 1 then logo.Text = nameInput.Text end end)
+
+-- ЦИКЛЫ И ПЕРЕТАСКИВАНИЕ
 RunService.Stepped:Connect(function()
 	if noclipEnabled and player.Character then
 		for _, v in pairs(player.Character:GetChildren()) do if v:IsA("BasePart") then v.CanCollide = false end end
