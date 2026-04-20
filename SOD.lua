@@ -1,3 +1,8 @@
+local existingGui = game:GetService("CoreGui"):FindFirstChild("SOD_Ultra_SyncSync") or game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("SOD_Ultra_SyncSync")
+if existingGui then
+    existingGui:Destroy()
+end
+
 -- СЕРВИСЫ
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
