@@ -262,21 +262,31 @@ end
 -- КОНТЕНТ: ГЛАВНАЯ
 local function runServerHop()
     local success, result = pcall(function()
-        return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Desc&limit=100"))
+        -- Уменьшаем лимит до 50 (это стабильнее) и убираем жесткую сортировку
+        local url = "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?limit=50&excludeFullGames=true"
+        return HttpService:JSONDecode(game:HttpGet(url))
     end)
+    
     if success and result and result.data then
+        local found = false
         for _, v in pairs(result.data) do
-            if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            -- Проверяем, что это не наш текущий сервер и там есть места
+            if v.id ~= game.JobId and v.playing < v.maxPlayers then
+                found = true
                 TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, player)
                 break
             end
         end
+        
+        -- Если не нашли через API, пробуем стандартный метод (на любой сервер)
+        if not found then
+            TeleportService:Teleport(game.PlaceId, player)
+        end
+    else
+        -- Если API вообще не ответило, просто перезаходим в игру
+        TeleportService:Teleport(game.PlaceId, player)
     end
 end
-
-local mainHop = createCheatBtn("Сменить сервер", mainPage, 0)
-mainHop.TextColor3 = Color3.fromRGB(120, 180, 255)
-mainHop.MouseButton1Click:Connect(runServerHop)
 
 local speedInput = setupInput("Скорость", mainPage, 1)
 local jumpInput = setupInput("Высота прыжка", mainPage, 2)
@@ -413,6 +423,21 @@ end, colorInputStroke, 5)
 local openBindsBtn = createCheatBtn("Настроить бинды", settingsPage, 6)
 openBindsBtn.TextColor3 = Color3.new(1, 1, 0)
 openBindsBtn.MouseButton1Click:Connect(function() bindsFrame.Visible = not bindsFrame.Visible end)
+
+local openExplorerBtn = createCheatBtn("Открыть Explorer", settingsPage, 7)
+openExplorerBtn.TextColor3 = Color3.fromRGB(150, 255, 150) -- Светло-зеленый
+
+openExplorerBtn.MouseButton1Click:Connect(function()
+    -- Используем проверенный скрипт Dex Explorer
+    -- Он подгрузится прямо в твою игру
+    local success, err = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+    end)
+    
+    if not success then
+        warn("Ошибка загрузки Explorer: " .. tostring(err))
+    end
+end)
 
 -- КОНТЕНТ: БИНДЫ
 local bindsTitle = Instance.new("TextLabel", bindsFrame)
